@@ -1,0 +1,17 @@
+{
+  "name": "create-bingstack-app",
+  "version": "0.1.0",
+  "description": "Create a new Bingstack app with auth, routing, and database pre-configured",
+  "type": "module",
+  "bin": {
+    "create-bingstack-app": "./index.mjs"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.9.1",
+    "degit": "^2.8.4",
+    "execa": "^9.5.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
