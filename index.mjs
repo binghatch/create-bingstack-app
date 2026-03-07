@@ -6,10 +6,7 @@ import fs from 'fs/promises'
 import path from 'path'
 import { existsSync } from 'fs'
 
-// ─── Config ────────────────────────────────────────────────────────────────────
-// Your GitHub template repo in the format "username/repo"
-const TEMPLATE_REPO = 'GITHUB_USERNAME/TEMPLATE_REPO'
-// ───────────────────────────────────────────────────────────────────────────────
+const TEMPLATE_REPO = 'binghatch/bingstack-template'
 
 const args = process.argv.slice(2)
 const argProjectName = args.find((a) => !a.startsWith('--'))
@@ -19,7 +16,6 @@ async function main() {
   console.log()
   p.intro('create-bingstack-app')
 
-  // ── Step 1: Project name ────────────────────────────────────────────────────
   let projectName = argProjectName
 
   if (!projectName) {
@@ -31,7 +27,6 @@ async function main() {
     if (p.isCancel(projectName)) return cancel()
   }
 
-  // ── Step 2: Protected route name ────────────────────────────────────────────
   const protectedRoute = await p.text({
     message: 'Main protected page name (shown after sign-in)',
     placeholder: 'dashboard',
@@ -40,7 +35,6 @@ async function main() {
   })
   if (p.isCancel(protectedRoute)) return cancel()
 
-  // ── Step 3: Package manager ─────────────────────────────────────────────────
   const pkgManager = await p.select({
     message: 'Package manager',
     options: [
@@ -52,7 +46,6 @@ async function main() {
   })
   if (p.isCancel(pkgManager)) return cancel()
 
-  // ── Confirm ─────────────────────────────────────────────────────────────────
   const targetDir = path.resolve(process.cwd(), projectName)
 
   if (existsSync(targetDir)) {
@@ -67,7 +60,6 @@ async function main() {
     s.stop('Removed')
   }
 
-  // ── Clone template ───────────────────────────────────────────────────────────
   {
     const s = p.spinner()
     s.start('Cloning template...')
@@ -90,7 +82,6 @@ async function main() {
     }
   }
 
-  // ── Apply replacements ───────────────────────────────────────────────────────
   {
     const s = p.spinner()
     s.start('Configuring project...')
@@ -98,7 +89,6 @@ async function main() {
     s.stop('Project configured')
   }
 
-  // ── Install dependencies ─────────────────────────────────────────────────────
   {
     const s = p.spinner()
     s.start(`Installing dependencies with ${pkgManager}...`)
@@ -106,7 +96,6 @@ async function main() {
     s.stop('Dependencies installed')
   }
 
-  // ── Done ─────────────────────────────────────────────────────────────────────
   p.outro(
     `Done! Next steps:\n\n` +
       `  cd ${projectName}\n` +
@@ -115,12 +104,9 @@ async function main() {
   )
 }
 
-// ── Replacements ────────────────────────────────────────────────────────────────
-
 async function applyReplacements(dir, appName, protectedRoute) {
   const oldRoute = 'workspace'
 
-  // 1. Rename the protected route file if needed
   if (protectedRoute !== oldRoute) {
     const oldFile = path.join(dir, `src/routes/_protected/${oldRoute}.tsx`)
     const newFile = path.join(dir, `src/routes/_protected/${protectedRoute}.tsx`)
@@ -129,11 +115,9 @@ async function applyReplacements(dir, appName, protectedRoute) {
     }
   }
 
-  // 2. Walk all text files and do string replacements
   const files = await walkFiles(dir, ['node_modules', '.git', 'dist', '.cache', '.turbo'])
 
   for (const file of files) {
-    // Only process text files
     if (!isTextFile(file)) continue
 
     let content = await fs.readFile(file, 'utf-8').catch(() => null)
@@ -141,15 +125,12 @@ async function applyReplacements(dir, appName, protectedRoute) {
 
     const original = content
 
-    // Replace package name
     if (file.endsWith('package.json')) {
       content = content.replace(/"name":\s*"app"/, `"name": "${appName}"`)
     }
 
-    // Replace page title
     content = content.replaceAll('TanStack Start Starter', toTitleCase(appName))
 
-    // Replace protected route references (case-sensitive variants)
     if (protectedRoute !== oldRoute) {
       content = content
         .replaceAll(`/_protected/${oldRoute}`, `/_protected/${protectedRoute}`)
@@ -164,8 +145,6 @@ async function applyReplacements(dir, appName, protectedRoute) {
     }
   }
 }
-
-// ── Helpers ─────────────────────────────────────────────────────────────────────
 
 async function walkFiles(dir, ignore = []) {
   const results = []
@@ -192,7 +171,6 @@ const TEXT_EXTENSIONS = new Set([
 function isTextFile(filePath) {
   const ext = path.extname(filePath)
   const base = path.basename(filePath)
-  // Handle extension-less dotfiles like .env
   return TEXT_EXTENSIONS.has(ext) || TEXT_EXTENSIONS.has(base)
 }
 
