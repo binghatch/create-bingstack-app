@@ -8,8 +8,8 @@
   },
   "dependencies": {
     "@clack/prompts": "^0.9.1",
-    "degit": "^2.8.4",
-    "execa": "^9.5.2"
+    "execa": "^9.5.2",
+    "giget": "^3.1.2"
   },
   "engines": {
     "node": ">=18"

@@ -64,20 +64,13 @@ async function main() {
     const s = p.spinner()
     s.start('Cloning template...')
     try {
-      const templateSource = argTemplate ?? TEMPLATE_REPO
-      const degit = (await import('degit')).default
-      const emitter = degit(templateSource, { cache: false, force: true })
-      await emitter.clone(targetDir)
+      const { downloadTemplate } = await import('giget')
+      const templateSource = argTemplate ?? `gh:${TEMPLATE_REPO}`
+      await downloadTemplate(templateSource, { dir: targetDir, force: true })
       s.stop('Template cloned')
     } catch (err) {
       s.stop('Failed to clone template')
       p.log.error(String(err.message ?? err))
-      if (!argTemplate) {
-        p.log.info(
-          `Make sure you've set TEMPLATE_REPO in index.mjs to your GitHub "username/repo".\n` +
-            `Or pass a local path: npx create-bingstack-app --template=../my-template`,
-        )
-      }
       process.exit(1)
     }
   }
