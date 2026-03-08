@@ -1,6 +1,6 @@
 {
   "name": "create-bingstack-app",
-  "version": "0.1.1",
+  "version": "0.1.4",
   "description": "Create a new Bingstack app with auth, routing, and database pre-configured",
   "type": "module",
   "bin": {

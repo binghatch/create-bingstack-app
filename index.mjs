@@ -27,6 +27,13 @@ async function main() {
     if (p.isCancel(projectName)) return cancel()
   }
 
+  const appDisplayName = await p.text({
+    message: 'App display name (shown in the UI)',
+    placeholder: 'Acme.inc',
+    initialValue: 'Acme.inc',
+  })
+  if (p.isCancel(appDisplayName)) return cancel()
+
   const protectedRoute = await p.text({
     message: 'Main protected page name (shown after sign-in)',
     placeholder: 'dashboard',
@@ -45,6 +52,12 @@ async function main() {
     initialValue: 'npm',
   })
   if (p.isCancel(pkgManager)) return cancel()
+
+  const { failed } = await execa(pkgManager, ['--version'], { reject: false })
+  if (failed) {
+    p.log.error(`${pkgManager} is not installed. Please install it and try again.`)
+    process.exit(1)
+  }
 
   const targetDir = path.resolve(process.cwd(), projectName)
 
@@ -78,15 +91,27 @@ async function main() {
   {
     const s = p.spinner()
     s.start('Configuring project...')
-    await applyReplacements(targetDir, projectName, protectedRoute)
+    await applyReplacements(targetDir, projectName, protectedRoute, appDisplayName)
     s.stop('Project configured')
   }
 
   {
     const s = p.spinner()
     s.start(`Installing dependencies with ${pkgManager}...`)
-    await execa(pkgManager, ['install'], { cwd: targetDir })
+    await execa(pkgManager, ['install'], { cwd: targetDir, shell: true })
     s.stop('Dependencies installed')
+  }
+
+  const initGit = await p.confirm({
+    message: 'Initialize a git repository?',
+    initialValue: true,
+  })
+  if (p.isCancel(initGit)) return cancel()
+
+  if (initGit) {
+    await execa('git', ['init'], { cwd: targetDir })
+    await execa('git', ['add', '-A'], { cwd: targetDir })
+    await execa('git', ['commit', '-m', 'Initial commit'], { cwd: targetDir })
   }
 
   p.outro(
@@ -97,7 +122,7 @@ async function main() {
   )
 }
 
-async function applyReplacements(dir, appName, protectedRoute) {
+async function applyReplacements(dir, appName, protectedRoute, appDisplayName) {
   const oldRoute = 'workspace'
 
   if (protectedRoute !== oldRoute) {
@@ -123,6 +148,7 @@ async function applyReplacements(dir, appName, protectedRoute) {
     }
 
     content = content.replaceAll('TanStack Start Starter', toTitleCase(appName))
+    content = content.replaceAll('Acme.inc', appDisplayName)
 
     if (protectedRoute !== oldRoute) {
       content = content
